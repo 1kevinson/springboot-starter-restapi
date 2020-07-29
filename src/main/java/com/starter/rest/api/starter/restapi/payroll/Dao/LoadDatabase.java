@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import com.starter.rest.api.starter.restapi.payroll.Entities.Employee;
 import com.starter.rest.api.starter.restapi.payroll.Repository.EmployeeRepository;
 
@@ -19,7 +20,10 @@ class LoadDatabase {
 
 		return args -> {
 			log.info("Preloading " + repository.save(new Employee("Bilbo Baggins", "burglar")));
-			log.info("Preloading " + repository.save(new Employee("Frodo Baggins", "thief")));
+			log.info("Preloading " + repository.save(new Employee("Frosdggins", "djsbd")));
+			log.info("Preloading " + repository.save(new Employee("Frodosdsd Baggins", "sdsd")));
+			log.info("Preloading " + repository.save(new Employee("Frodosdsds Baggins", "thdsdsdief")));
+			log.info("Preloading " + repository.save(new Employee("Frodo Baggins", "tsdsdshief")));
 		};
 	}
 }

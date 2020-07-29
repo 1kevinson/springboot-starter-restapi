@@ -17,48 +17,46 @@ import com.starter.rest.api.starter.restapi.payroll.Repository.EmployeeRepositor
 @RestController
 class EmployeeController {
 
-  private final EmployeeRepository repository;
+	private final EmployeeRepository repository;
 
-  EmployeeController(EmployeeRepository repository) {
-    this.repository = repository;
-  }
+	EmployeeController(EmployeeRepository repository) {
+		this.repository = repository;
+	}
 
-  // Aggregate root
-  @GetMapping("/employees")
-  List<Employee> all() {
-    return repository.findAll();
-  }
+	// All employees
+	@GetMapping("/employees")
+	List<Employee> fetchAllEmployee() {
+		return repository.findAll();
+	}
 
-  @PostMapping("/employees")
-  Employee newEmployee(@RequestBody Employee newEmployee) {
-    return repository.save(newEmployee);
-  }
+	// Save One employee
+	@PostMapping("/employees")
+	Employee saveEmployee(@RequestBody Employee newEmployee) {
+		return repository.save(newEmployee);
+	}
 
-  // Single item
-  @GetMapping("/employees/{id}")
-  Employee one(@PathVariable Long id) {
+	// Get One employee
+	@GetMapping("/employees/{id}")
+	Employee fetchEmployee(@PathVariable Long id) {
+		return repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+	}
 
-    return repository.findById(id)
-      .orElseThrow(() -> new EmployeeNotFoundException(id));
-  }
+	// Update or Create One employee
+	@PutMapping("/employees/{id}")
+	Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+		return repository.findById(id).map(employee -> {
+			employee.setName(newEmployee.getName());
+			employee.setRole(newEmployee.getRole());
+			return repository.save(employee);
+		}).orElseGet(() -> {
+			newEmployee.setId(id);
+			return repository.save(newEmployee);
+		});
+	}
 
-  @PutMapping("/employees/{id}")
-  Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
-
-    return repository.findById(id)
-      .map(employee -> {
-        employee.setName(newEmployee.getName());
-        employee.setRole(newEmployee.getRole());
-        return repository.save(employee);
-      })
-      .orElseGet(() -> {
-        newEmployee.setId(id);
-        return repository.save(newEmployee);
-      });
-  }
-
-  @DeleteMapping("/employees/{id}")
-  void deleteEmployee(@PathVariable Long id) {
-    repository.deleteById(id);
-  }
+	// Delete One Employee
+	@DeleteMapping("/employees/{id}")
+	void deleteEmployee(@PathVariable Long id) {
+		repository.deleteById(id);
+	}
 }
