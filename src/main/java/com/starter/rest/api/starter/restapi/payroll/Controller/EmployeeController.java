@@ -4,7 +4,9 @@ import static org.springframework.hateoas.server.mvc.ControllerLinkBuilder.metho
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import com.starter.rest.api.starter.restapi.payroll.Entities.Employee;
 import com.starter.rest.api.starter.restapi.payroll.Exception.EmployeeNotFoundException;
 import com.starter.rest.api.starter.restapi.payroll.Repository.EmployeeRepository;
 
+@SuppressWarnings("deprecation")
 @RestController
 class EmployeeController {
 
@@ -29,8 +32,15 @@ class EmployeeController {
 
 	// All employees
 	@GetMapping("/employees")
-	List<Employee> fetchAllEmployee() {
-		return repository.findAll();
+	CollectionModel<EntityModel<Employee>> fetchAllEmployee() {
+		List<EntityModel<Employee>> employees = repository.findAll().stream()
+			      .map(employee -> EntityModel.of(employee,
+			          linkTo(methodOn(this.getClass()).fetchEmployee(employee.getId())).withSelfRel(),
+			          linkTo(methodOn(this.getClass()).fetchAllEmployee()).withRel("employees")))
+			      .collect(Collectors.toList());
+		
+		
+		return  CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).fetchAllEmployee()).withSelfRel());
 	}
 
 	// Save One employee
@@ -40,7 +50,6 @@ class EmployeeController {
 	}
 
 	// Get One employee
-	@SuppressWarnings("deprecation")
 	@GetMapping("/employees/{id}")
 	EntityModel<Employee> fetchEmployee(@PathVariable Long id) {
 	   Employee employee = repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
