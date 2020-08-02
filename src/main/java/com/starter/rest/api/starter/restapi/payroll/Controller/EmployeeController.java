@@ -1,7 +1,11 @@
 package com.starter.rest.api.starter.restapi.payroll.Controller;
 
+import static org.springframework.hateoas.server.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+
 import java.util.List;
 
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,9 +40,14 @@ class EmployeeController {
 	}
 
 	// Get One employee
+	@SuppressWarnings("deprecation")
 	@GetMapping("/employees/{id}")
-	Employee fetchEmployee(@PathVariable Long id) {
-		return repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+	EntityModel<Employee> fetchEmployee(@PathVariable Long id) {
+	   Employee employee = repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+		
+	   return EntityModel.of(employee, //
+		      linkTo(methodOn(this.getClass()).fetchEmployee(id)).withSelfRel(),
+		      linkTo(methodOn(EmployeeController.class).fetchAllEmployee()).withRel("employees"));
 	}
 
 	// Update or Create One employee
