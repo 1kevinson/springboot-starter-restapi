@@ -1,7 +1,7 @@
 package com.starter.rest.api.starter.restapi.payroll.Controller;
 
-import static org.springframework.hateoas.server.mvc.ControllerLinkBuilder.methodOn;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,51 +17,49 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.starter.rest.api.starter.restapi.payroll.Entities.Employee;
+import com.starter.rest.api.starter.restapi.payroll.Entities.EmployeeModelAssembler;
 import com.starter.rest.api.starter.restapi.payroll.Exception.EmployeeNotFoundException;
 import com.starter.rest.api.starter.restapi.payroll.Repository.EmployeeRepository;
 
 @SuppressWarnings("deprecation")
 @RestController
-class EmployeeController {
+public class EmployeeController {
 
 	private final EmployeeRepository repository;
+	private final EmployeeModelAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository) {
+	EmployeeController(EmployeeRepository repository, EmployeeModelAssembler assembler) {
 		this.repository = repository;
+		this.assembler = assembler;
 	}
 
 	// All employees
 	@GetMapping("/employees")
-	CollectionModel<EntityModel<Employee>> fetchAllEmployee() {
-		List<EntityModel<Employee>> employees = repository.findAll().stream()
-			      .map(employee -> EntityModel.of(employee,
-			          linkTo(methodOn(this.getClass()).fetchEmployee(employee.getId())).withSelfRel(),
-			          linkTo(methodOn(this.getClass()).fetchAllEmployee()).withRel("employees")))
-			      .collect(Collectors.toList());
-		
-		
-		return  CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).fetchAllEmployee()).withSelfRel());
+	public CollectionModel<EntityModel<Employee>> fetchAllEmployee() {
+		List<EntityModel<Employee>> employees = repository.findAll().stream() //
+				.map(assembler::toModel) //
+				.collect(Collectors.toList());
+
+		return CollectionModel.of(employees, linkTo(methodOn(this.getClass()).fetchAllEmployee()).withSelfRel());
 	}
 
 	// Save One employee
 	@PostMapping("/employees")
-	Employee saveEmployee(@RequestBody Employee newEmployee) {
+	public Employee saveEmployee(@RequestBody Employee newEmployee) {
 		return repository.save(newEmployee);
 	}
 
 	// Get One employee
 	@GetMapping("/employees/{id}")
-	EntityModel<Employee> fetchEmployee(@PathVariable Long id) {
-	   Employee employee = repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
-		
-	   return EntityModel.of(employee, //
-		      linkTo(methodOn(this.getClass()).fetchEmployee(id)).withSelfRel(),
-		      linkTo(methodOn(EmployeeController.class).fetchAllEmployee()).withRel("employees"));
+	public EntityModel<Employee> fetchEmployee(@PathVariable Long id) {
+		Employee employee = repository.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+
+		return assembler.toModel(employee);
 	}
 
 	// Update or Create One employee
 	@PutMapping("/employees/{id}")
-	Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+	public Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
 		return repository.findById(id).map(employee -> {
 			employee.setName(newEmployee.getName());
 			employee.setRole(newEmployee.getRole());
@@ -74,7 +72,7 @@ class EmployeeController {
 
 	// Delete One Employee
 	@DeleteMapping("/employees/{id}")
-	void deleteEmployee(@PathVariable Long id) {
+	public void deleteEmployee(@PathVariable Long id) {
 		repository.deleteById(id);
 	}
 }
